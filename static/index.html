@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithm Dashboard</title>
+    <meta name="description"
+        content="A beautiful dashboard tracking your competitive programming progress across Codeforces, LeetCode, and AtCoder.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+</head>
+
+<body>
+    <!-- ========== 配置页（输入用户名） ========== -->
+    <div class="setup-overlay" id="setupOverlay">
+        <div class="setup-card">
+
+            <h1 class="setup-title">Algorithm Dashboard</h1>
+            <p class="setup-subtitle">输入你的 OJ 用户名，生成专属数据仪表盘</p>
+
+            <form id="setupForm" autocomplete="off">
+                <div class="input-group input-group-cf">
+                    <label for="cfInput">
+                        <span class="platform-dot dot-cf"></span>
+                        Codeforces
+                    </label>
+                    <input type="text" id="cfInput" placeholder="输入 Handle（选填）">
+                </div>
+                <div class="input-group input-group-lc">
+                    <label for="lcInput">
+                        <span class="platform-dot dot-lc"></span>
+                        LeetCode
+                    </label>
+                    <div class="lc-row">
+                        <input type="text" id="lcInput" placeholder="输入用户名（选填）">
+                        <select id="lcSite">
+                            <option value="cn">中国站</option>
+                            <option value="com">国际站</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group input-group-ac">
+                    <label for="acInput">
+                        <span class="platform-dot dot-ac"></span>
+                        AtCoder
+                    </label>
+                    <input type="text" id="acInput" placeholder="输入用户名（选填）">
+                </div>
+
+                <button type="submit" class="btn-generate" id="btnGenerate">
+                    <span class="btn-text">生成仪表盘</span>
+                    <span class="btn-loader" style="display:none;"></span>
+                </button>
+                <p class="setup-hint">至少填写一个平台的用户名</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== 仪表盘主界面 ========== -->
+    <div class="app-container" id="appContainer" style="display: none;">
+        <header class="app-header">
+            <div class="header-left">
+                <h1>Algorithm Dashboard</h1>
+                <p>Tracking Codeforces, LeetCode & AtCoder</p>
+            </div>
+            <div class="header-right">
+                <div class="total-solved-box">
+                    <div class="ts-label">Total Solved</div>
+                    <div class="ts-value" id="totalSolvedCount">0</div>
+                </div>
+                <button class="btn-reconfigure" id="btnReconfigure" title="重新配置用户名">⚙</button>
+            </div>
+        </header>
+
+        <main>
+            <div id="loading" class="panel center-text" style="display: none;">
+                <div class="loading-spinner"></div>
+                <h2>正在加载数据...</h2>
+                <p>正在从各平台获取 API 数据，请稍候</p>
+            </div>
+
+            <div id="error" class="panel center-text error-text" style="display: none;"></div>
+
+            <div class="dashboard-grid" id="dashboard" style="display: none;">
+                <!-- 左侧 -->
+                <div class="side-panel">
+                    <section class="panel">
+                        <div class="panel-heading">Platform Distribution</div>
+                        <div class="panel-body">
+                            <div id="pieChart" style="width: 100%; height: 280px;"></div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-heading">Details</div>
+                        <div class="panel-body">
+                            <table class="data-table" id="platformsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Platform</th>
+                                        <th>Solved</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- 右侧 -->
+                <div class="main-panel">
+                    <section class="panel">
+                        <div class="panel-heading">
+                            Submissions Heatmap
+                            <span class="float-right" id="totalSubsCounter">0 Submissions</span>
+                        </div>
+                        <div class="panel-body">
+                            <div id="heatmapChart" style="width: 100%; height: 200px;"></div>
+                        </div>
+                    </section>
+
+                    <section class="panel">
+                        <div class="panel-heading">
+                            Maximum Difficulty (Rating) Heatmap
+                            <span class="float-right subtle-text">Max of CF/AtCoder Difficulty per Day</span>
+                        </div>
+                        <div class="panel-body">
+                            <div id="difficultyHeatmapChart" style="width: 100%; height: 200px;"></div>
+
+                            <div class="rating-legend">
+                                <div class="rating-box tooltip-custom" data-title="Newbie (< 1200)"
+                                    style="background-color: #CCCCCC;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Pupil (1200-1399)"
+                                    style="background-color: #77FF77;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Specialist (1400-1599)"
+                                    style="background-color: #77DDBB;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Expert (1600-1899)"
+                                    style="background-color: #AAAAFF;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Candidate Master (1900-2099)"
+                                    style="background-color: #FF88FF;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Master (2100-2299)"
+                                    style="background-color: #FFCC88;"></div>
+                                <div class="rating-box tooltip-custom" data-title="International Master (2300-2399)"
+                                    style="background-color: #FFBB55;"></div>
+                                <div class="rating-box tooltip-custom" data-title="Grandmaster (>= 2400)"
+                                    style="background-color: #FF7777;"></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
