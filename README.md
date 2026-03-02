@@ -2,7 +2,7 @@
 
 **将 Codeforces、LeetCode、AtCoder 三大平台的提交记录聚合到一张热力图上。**
 
-你可能在 Codeforces 上打比赛，在 LeetCode 上刷题，在 AtCoder 上练手 —— 但没有一个地方能看到你**所有平台加在一起**的训练热度。OJ Dashboard 就是为此而生：一个统一的 GitHub 风格提交热力图，让你的训练成果一目了然。
+你可能在 Codeforces 上打比赛，在 LeetCode 上刷题，在 AtCoder 上练手 —— 但没有一个地方能看到你**所有平台加在一起**的训练热度图。OJ Dashboard 就是为此而生：一个统一的 GitHub 风格提交热力图，让你的训练成果一目了然。
 
 ## ✨ 功能
 
@@ -79,6 +79,4 @@ oj-dashboard/
 
 Python Flask + ECharts，数据来自 Codeforces 官方 API、LeetCode GraphQL API、AtCoder (kenkoooo) API。
 
-## 📄 License
-
-MIT
+实际上就是antigravity生成的(doge)
