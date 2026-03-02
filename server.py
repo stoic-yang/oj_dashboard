@@ -44,6 +44,7 @@ def get_data():
     aggregated_max_difficulty = {}
     platform_stats = []
     total_solved = 0
+    today_solved_all = {}
     
     for key, data in raw_results.items():
         if "error" in data:
@@ -63,12 +64,17 @@ def get_data():
             
         for date_str, diff in data.get('daily_max_difficulty', {}).items():
             aggregated_max_difficulty[date_str] = max(aggregated_max_difficulty.get(date_str, 0), diff)
+        
+        today_list = data.get('today_solved', [])
+        if today_list:
+            today_solved_all[data['platform']] = today_list
             
     response_data = {
         "platforms": platform_stats,
         "total_solved": total_solved,
         "heatmap": aggregated_daily_submissions,
-        "difficulty_heatmap": aggregated_max_difficulty
+        "difficulty_heatmap": aggregated_max_difficulty,
+        "today_solved": today_solved_all
     }
     
     return jsonify(response_data)

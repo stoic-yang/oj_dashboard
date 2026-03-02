@@ -96,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPieChart(validPlatforms);
             renderSubmissionsHeatmap(data.heatmap);
             renderDifficultyHeatmap(data.difficulty_heatmap);
+            renderTodaySolved(data.today_solved || {});
 
         } catch (e) {
             loadingEl.style.display = 'none';
@@ -138,7 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
             itemStyle: { color: THEME[p.name] }
         }));
 
-        const option = {
+        let startAngle = 90;
+        let isDragging = false;
+        let lastX = 0;
+
+        const buildOption = (angle) => ({
             tooltip: {
                 trigger: 'item',
                 formatter: '{b}: {c} ({d}%)'
@@ -153,22 +158,109 @@ document.addEventListener('DOMContentLoaded', () => {
                     type: 'pie',
                     radius: '60%',
                     center: ['50%', '45%'],
+                    startAngle: angle,
                     data: validData,
-                    label: {
-                        show: true,
-                        formatter: '{b}: {c}',
-                        fontSize: 12
-                    },
-                    labelLine: {
-                        show: true,
-                        length: 15,
-                        length2: 10
+                    label: { show: false },
+                    labelLine: { show: false },
+                    emphasis: {
+                        scale: false,
+                        label: { show: false },
+                        itemStyle: {
+                            shadowBlur: 15,
+                            shadowColor: 'rgba(0,0,0,0.15)'
+                        }
                     }
                 }
             ]
-        };
-        myChart.setOption(option);
+        });
+
+        myChart.setOption(buildOption(startAngle));
+
+        // 鼠标拖拽旋转
+        chartDom.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            chartDom.style.cursor = 'grabbing';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - lastX;
+            startAngle = (startAngle + dx * 0.5) % 360;
+            myChart.setOption({ series: [{ startAngle: startAngle }] });
+            lastX = e.clientX;
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            chartDom.style.cursor = 'grab';
+        });
+
+        chartDom.style.cursor = 'grab';
         window.addEventListener('resize', () => myChart.resize());
+    }
+
+    function renderTodaySolved(todayData) {
+        const panel = document.getElementById('todaySolvedPanel');
+        const body = document.getElementById('todaySolvedBody');
+        
+        const platforms = Object.keys(todayData);
+        if (platforms.length === 0) {
+            panel.style.display = 'none';
+            return;
+        }
+
+        panel.style.display = 'block';
+        body.innerHTML = '';
+
+        const THEME_MAP = {
+            Codeforces: { color: '#4A90D9', dot: 'dot-cf' },
+            LeetCode:   { color: '#F5A623', dot: 'dot-lc' },
+            AtCoder:    { color: '#4CAF50', dot: 'dot-ac' }
+        };
+
+        // 横向容器，让各平台并排显示
+        const container = document.createElement('div');
+        container.style.cssText = 'display:flex;gap:24px;flex-wrap:wrap;';
+
+        platforms.forEach(platform => {
+            const problems = todayData[platform];
+            if (!problems || problems.length === 0) return;
+
+            const theme = THEME_MAP[platform] || { color: '#888', dot: '' };
+
+            const section = document.createElement('div');
+            section.style.cssText = 'flex:1;min-width:200px;';
+
+            const title = document.createElement('div');
+            title.style.cssText = 'font-weight:bold;font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:6px;';
+            title.innerHTML = `<span class="platform-dot" style="background:${theme.color};width:8px;height:8px;"></span>${platform}`;
+            section.appendChild(title);
+
+            const list = document.createElement('div');
+            list.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;';
+
+            problems.forEach(name => {
+                const tag = document.createElement('span');
+                tag.textContent = name;
+                tag.style.cssText = `
+                    display:inline-block;
+                    padding:3px 8px;
+                    background:${theme.color}15;
+                    border:1px solid ${theme.color}40;
+                    border-radius:4px;
+                    font-size:12px;
+                    color:#333;
+                    white-space:nowrap;
+                `;
+                list.appendChild(tag);
+            });
+
+            section.appendChild(list);
+            container.appendChild(section);
+        });
+
+        body.appendChild(container);
     }
 
     // 通用的日历基础配置

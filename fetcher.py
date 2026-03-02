@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from datetime import datetime
+from datetime import datetime, date
 
 def timestamp_to_date(ts):
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d')
@@ -36,6 +36,9 @@ def fetch_codeforces(config):
         daily_subs = {}
         daily_diff = {}
         solved_problems = set()
+        today_str = date.today().strftime('%Y-%m-%d')
+        today_solved = []
+        today_seen = set()
         
         for sub in data['result']:
             date_str = timestamp_to_date(sub['creationTimeSeconds'])
@@ -43,16 +46,21 @@ def fetch_codeforces(config):
             if sub.get('verdict') == 'OK':
                 problem_id = f"{sub['problem']['contestId']}{sub['problem']['index']}"
                 solved_problems.add(problem_id)
-                # 获取该题难度 (rating)
                 rating = sub['problem'].get('rating', 0)
                 if rating > 0:
                     daily_diff[date_str] = max(daily_diff.get(date_str, 0), rating)
+                # 收集今日 AC 题目
+                if date_str == today_str and problem_id not in today_seen:
+                    today_seen.add(problem_id)
+                    name = sub['problem'].get('name', problem_id)
+                    today_solved.append(name)
                 
         return {
             "platform": "Codeforces",
             "daily_submissions": daily_subs,
             "daily_max_difficulty": daily_diff,
-            "solved_count": len(solved_problems)
+            "solved_count": len(solved_problems),
+            "today_solved": today_solved
         }
     except Exception as e:
         return {"platform": "Codeforces", "daily_submissions": {}, "daily_max_difficulty": {}, "solved_count": 0, "error": str(e)}
@@ -116,12 +124,13 @@ def fetch_leetcode(config):
                     
                 solved_count = user_data['submitStats']['acSubmissionNum'][0]['count']
                 
-        # LeetCode 无法通过日历 API 直接获取每日的具体过题难度，暂留空
+        # LeetCode 日历 API 无法获取每日具体题目名称和难度
         return {
             "platform": "LeetCode",
             "daily_submissions": daily_subs,
             "daily_max_difficulty": {}, 
-            "solved_count": solved_count
+            "solved_count": solved_count,
+            "today_solved": []
         }
     except Exception as e:
         return {"platform": "LeetCode", "daily_submissions": {}, "daily_max_difficulty": {}, "solved_count": 0, "error": str(e)}
@@ -142,7 +151,10 @@ def fetch_atcoder(config):
         daily_subs = {}
         daily_diff = {}
         solved_problems = set()
-        models = dict(fetch_atcoder_models()) # 防止改变全局
+        models = dict(fetch_atcoder_models())
+        today_str = date.today().strftime('%Y-%m-%d')
+        today_solved = []
+        today_seen = set()
         
         for sub in subs:
             date_str = timestamp_to_date(sub['epoch_second'])
@@ -151,17 +163,20 @@ def fetch_atcoder(config):
                 p_id = sub['problem_id']
                 solved_problems.add(p_id)
                 
-                # 尝试获取对应题目的 difficulty
                 diff = models.get(p_id, {}).get('difficulty', 0)
-                # 小于 0 的难度可能表示比较简单的题，对于我们的最大难度提取我们按大于 0 计算
                 if diff > 0:
                     daily_diff[date_str] = max(daily_diff.get(date_str, 0), diff)
+                
+                if date_str == today_str and p_id not in today_seen:
+                    today_seen.add(p_id)
+                    today_solved.append(p_id)
                 
         return {
             "platform": "AtCoder",
             "daily_submissions": daily_subs,
             "daily_max_difficulty": daily_diff,
-            "solved_count": len(solved_problems)
+            "solved_count": len(solved_problems),
+            "today_solved": today_solved
         }
     except Exception as e:
         return {"platform": "AtCoder", "daily_submissions": {}, "daily_max_difficulty": {}, "solved_count": 0, "error": str(e)}

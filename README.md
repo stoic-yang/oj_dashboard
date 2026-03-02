@@ -1,5 +1,7 @@
 # OJ Dashboard
 
+[English](README_EN.md) | 中文
+
 **将 Codeforces、LeetCode、AtCoder 三大平台的提交记录聚合到一张热力图上。**
 
 你可能在 Codeforces 上打比赛，在 LeetCode 上刷题，在 AtCoder 上练手 —— 但没有一个地方能看到你**所有平台加在一起**的训练热度图。OJ Dashboard 就是为此而生：一个统一的 GitHub 风格提交热力图，让你的训练成果一目了然。
@@ -10,7 +12,6 @@
 - 🏆 **难度热力图** — 展示每日所做最难题目的 Rating（CF / AtCoder）
 - 📊 **题数统计** — 汇总各平台已 AC 的题目数量，饼图展示分布
 - 🎯 **交互式输入** — 打开页面直接输入用户名即可，无需编辑配置文件
-- 💾 **自动记住** — 用户名保存在浏览器本地，下次无需重填
 
 ## 预览
 ![Dashboard Preview](preview.png)
